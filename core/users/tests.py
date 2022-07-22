@@ -24,5 +24,5 @@ class GetLoginTokenTestCase(APITestCase):
             "password": "tvandsofa123",
             "username": "testcase"
         }
-        response = self.client.post("/users/token/login", data)
+        response = self.client.post("/users/token/login/", data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
