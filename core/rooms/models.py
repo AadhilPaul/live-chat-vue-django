@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 import random
 import string
 
@@ -20,9 +20,10 @@ def generate_unique_code():
 class Room(models.Model):
     code = models.CharField(
         max_length=8, default=generate_unique_code, unique=True)
-    member = models.ManyToManyField(User, related_name="members", null=True)
+    member = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name="members")
     host = models.OneToOneField(
-        User, on_delete=models.CASCADE)
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -32,7 +33,8 @@ class Room(models.Model):
 class Messages(models.Model):
     text = models.TextField()
     room = models.OneToOneField(Room, on_delete=models.CASCADE)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
