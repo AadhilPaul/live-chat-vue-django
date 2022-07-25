@@ -81,5 +81,3 @@ class UserUpdateView(generics.RetrieveUpdateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({'Not Found': 'User does not exists.'}, status=status.HTTP_404_NOT_FOUND)
 
-
-

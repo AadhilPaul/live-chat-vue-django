@@ -21,7 +21,7 @@ class Room(models.Model):
     code = models.CharField(
         max_length=8, default=generate_unique_code, unique=True)
     member = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="members", null=True, blank=True)
+        settings.AUTH_USER_MODEL, related_name="members")
     host = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='room')
     created_at = models.DateTimeField(auto_now_add=True)

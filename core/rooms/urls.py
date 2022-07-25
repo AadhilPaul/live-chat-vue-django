@@ -3,5 +3,9 @@ from . import views
 
 urlpatterns = [
   path('', views.testing),
-  path('room/create/', views.RoomCreateView.as_view(), name='room-create')
+  path('room/create/', views.RoomCreateView.as_view(), name='room-create'),
+  path('room/join/<str:code>/', views.RoomJoinView.as_view(), name='room-join'),
+  path('room/leave/<str:code>/', views.RoomLeaveView.as_view(), name='room-leave'),
+  path('room/detail/<str:code>/', views.RoomDetailView.as_view(), name='room-detail'),
+  path('room/kick/<int:id>/<str:code>/', views.RoomKickUser.as_view(), name='room-kick-user')
 ]
