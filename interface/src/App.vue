@@ -1,7 +1,7 @@
 <template>
   <w-app>
     <w-toolbar fixed bg-color="blue-light5" color="blue-dark3">
-      <div class="title2">Title</div>
+      <div class="title2">Live Chat</div>
       <div class="spacer"></div>
       <w-button id="button" route="/signup" class="ma1" bg-color="primary" lg>
         Sign Up

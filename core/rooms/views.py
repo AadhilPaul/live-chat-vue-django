@@ -94,7 +94,8 @@ class RoomLeaveView(generics.RetrieveUpdateAPIView):
             room_serialized = RoomSerializer(room).data
             members_in_room = room_serialized['member']
             if request.user.id in members_in_room:
-                if len(members_in_room) == 1: # if last user leaves room room is deleted.
+                # if last user leaves room room is deleted.
+                if len(members_in_room) == 1:
                     room.delete()
                 room.member.remove(request.user)
                 return Response(self.serializer_class(room).data, status=status.HTTP_200_OK)
@@ -125,7 +126,8 @@ class RoomKickUser(generics.RetrieveUpdateAPIView):
 
             # if owner of room tries to kick himself.
             if user_id == request.user.id:
-                return Response({'Forbidden': 'You cannot kick yourself from your room'}, status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {'Forbidden': 'You cannot kick yourself from your room'}, status=status.HTTP_403_FORBIDDEN)
 
             # check if user is in the room.
             if user_id in members_in_room:
@@ -133,5 +135,3 @@ class RoomKickUser(generics.RetrieveUpdateAPIView):
                 return Response(self.serializer_class(room).data, status=status.HTTP_200_OK)
             return Response({'Forbidden': 'This user is not in this room.'}, status=status.HTTP_403_FORBIDDEN)
         return Response({'Not Found': 'Room or User does not exists.'}, status=status.HTTP_404_NOT_FOUND)
-
-

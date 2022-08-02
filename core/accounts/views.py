@@ -1,11 +1,19 @@
 from .serializers import *
+from difflib import SequenceMatcher
+from django.core import exceptions
+import django.contrib.auth.password_validation as validators
 from .models import User
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from rest_framework.decorators import api_view, permission_classes
+from difflib import SequenceMatcher
+from django.core.exceptions import (
+   ValidationError,
+)
 
 # Create your views here.
 
@@ -81,3 +89,36 @@ class UserUpdateView(generics.RetrieveUpdateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({'Not Found': 'User does not exists.'}, status=status.HTTP_404_NOT_FOUND)
 
+
+
+class PasswordValidationApi(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        first_name = request.data['first_name']
+        last_name = request.data['last_name']
+        username = request.data['username']
+        email = request.data['email']
+        password = request.data['password']
+
+        # attributes = [first_name, last_name, username, email]
+        attributes = {
+                "first name": first_name,
+                "last name": last_name,
+                "username": username,
+                "email": email,
+                }
+        
+        ratio = 0.7
+        for attribute in attributes:
+            if SequenceMatcher(a=password, b=attributes[attribute]).quick_ratio() > ratio:
+                return Response({"similar": f"This password too similar to your {attribute}"})
+
+        errors = dict()
+        try:
+            validators.validate_password(password=password)
+        except exceptions.ValidationError as e:
+             errors['password'] = list(e.messages)
+        print(errors)
+        return Response(errors, status=status.HTTP_200_OK)
+        
