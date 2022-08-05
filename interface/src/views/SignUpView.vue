@@ -132,10 +132,8 @@ async function password_validation(value) {
     }
     valids.valid_password = true;
   }
-  if (!(value.length > 8)) {
-    valids.valid_password = value.length > 8;
-    return "Password must be at least 8 characters";
-  }
+  valids.valid_password = value.length >= 8;
+  return value.length >= 8 || "Password must be at least 8 characters"
 }
 
 // password and confirm passwords are same
@@ -204,18 +202,17 @@ async function submitData() {
 }
 </script>
 
-<style>
+<style scoped>
 .signin {
   margin-top: 3rem;
 }
 .card {
-  margin: 50px 30em;
+  margin: 50px 35em;
   background: #fcfcfc;
   padding: 40px;
 }
 a {
   color: rgb(32, 107, 205);
-  text-decoration: none;
 }
 small {
   color: gray;
