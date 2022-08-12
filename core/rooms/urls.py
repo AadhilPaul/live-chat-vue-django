@@ -2,7 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-  path('', views.testing),
+  path('', views.AllRoomView.as_view(), name='rooms'),
+  path('ifroom/', views.IfInRoom.as_view(), name='if-in-room'),
   path('room/create/', views.RoomCreateView.as_view(), name='room-create'),
   path('room/join/<str:code>/', views.RoomJoinView.as_view(), name='room-join'),
   path('room/leave/<str:code>/', views.RoomLeaveView.as_view(), name='room-leave'),

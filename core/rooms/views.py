@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, get_list_or_404
 import json
 from accounts.models import User
 from django.conf import settings
@@ -28,6 +28,15 @@ class UserIsOwner(BasePermission):
         return obj.host == request.user
 
 
+class AllRoomView(generics.ListAPIView):
+    serializer_class = RoomSerializer
+    permission_classes = [AllowAny]
+    models = Room
+
+    def get_queryset(self):
+        return get_list_or_404(Room)
+
+
 class RoomDetailView(generics.RetrieveAPIView):
     serializer_class = RoomSerializer
     permission_classes = [AllowAny]
@@ -37,25 +46,41 @@ class RoomDetailView(generics.RetrieveAPIView):
         return get_object_or_404(Room, code=room_code)
 
 
+class IfInRoom(generics.RetrieveAPIView):
+    serializer_class = RoomSerializer
+    permission_classes = [AllowAny]
+
+    def get(self, request, format=None, **kwargs):
+        rooms = Room.objects.all()
+        for room in rooms:
+            for member in room.member.all():
+                if request.user.username == member.username:
+                    room_code = room.code
+                    your_room = Room.objects.filter(code=room_code).first()
+                    return Response(self.serializer_class(your_room).data, status=status.HTTP_403_FORBIDDEN)
+        return Response({"False": "Not in Room"}, status=status.HTTP_204_NO_CONTENT)
+
+
 class RoomCreateView(generics.CreateAPIView):
     serializer_class = RoomSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None, **kwargs):
         serializer = RoomSerializer(data=request.data)
-        try:
-            if request.user.room is not None:
-                return Response({"Forbidden": "You can have only one room at a time."}, status=status.HTTP_403_FORBIDDEN)
-        except BaseException:
-            if serializer.is_valid():
-                host = request.user
-                room = Room(host=host)
-                room.save()
-                room.member.add(host)
-                return Response(self.serializer_class(room).data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+        rooms = Room.objects.all()
+        for room in rooms:
+            for member in room.member.all():
+                if request.user.username == member.username:
+                    return Response({"Forbidden": "You are already in a room"}, status=status.HTTP_403_FORBIDDEN)
+                
+        if serializer.is_valid():
+            host = request.user
+            room = Room(host=host)
+            room.save()
+            room.member.add(host)
+            return Response(self.serializer_class(room).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 class RoomJoinView(generics.RetrieveUpdateAPIView):
     serializer_class = RoomSerializer
     permission_classes = [IsAuthenticated]
@@ -66,17 +91,18 @@ class RoomJoinView(generics.RetrieveUpdateAPIView):
 
     def put(self, request, format=None, **kwargs):
         room_code = self.kwargs.get('code')
-        try:
-            if request.user.room is not None:
-                return Response({"Forbidden": "You can join only one room at a time."}, status=status.HTTP_403_FORBIDDEN)
-        except BaseException:
-            queryset = Room.objects.filter(code=room_code)
-            if queryset.exists():
-                room = queryset[0]
-                room.member.add(request.user)
-                return Response(self.serializer_class(room).data, status=status.HTTP_200_OK)
-            return Response({'Not Found': 'Room does not exists'}, status=status.HTTP_404_NOT_FOUND)
-
+        rooms = Room.objects.all()
+        for room in rooms:
+            for member in room.member.all():
+                if request.user.username == member.username:
+                    return Response({"Forbidden": "You are already in a room"}, status=status.HTTP_403_FORBIDDEN)
+                
+        queryset = Room.objects.filter(code=room_code)
+        if queryset.exists():
+            room = queryset[0]
+            room.member.add(request.user)
+            return Response(self.serializer_class(room).data, status=status.HTTP_200_OK)
+        return Response({'Not Found': 'Room does not exists'}, status=status.HTTP_404_NOT_FOUND)
 
 class RoomLeaveView(generics.RetrieveUpdateAPIView):
     serializer_class = RoomSerializer

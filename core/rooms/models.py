@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.conf import settings
 import random
 import string
@@ -16,12 +17,11 @@ def generate_unique_code():
 
     return code
 
-
 class Room(models.Model):
     code = models.CharField(
         max_length=8, default=generate_unique_code, unique=True)
     member = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="members")
+        settings.AUTH_USER_MODEL, related_name="members", blank=True)
     host = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='room')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -31,10 +31,14 @@ class Room(models.Model):
 
 class Messages(models.Model):
     text = models.TextField()
-    room = models.OneToOneField(Room, on_delete=models.CASCADE)
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    room = models.CharField(max_length=12, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='message', null=True, blank=True, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        if Room.objects.filter(code=self.room).count() == 0:
+            raise ValidationError(('Room with this code does not exist.'))
 
     def __str__(self):
         return self.text
+    
