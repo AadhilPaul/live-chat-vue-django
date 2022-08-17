@@ -28,35 +28,45 @@
   </w-app>
 </template>
 
-<script setup>
+<script>
 import { onMounted, ref } from "vue";
 
-let authenticated = ref(false);
+export default {
+  name: "App",
+  setup() {
+    let authenticated = ref(false);
 
-onMounted(() => {
-  if ("auth_token" in localStorage) authenticated.value = true;
-});
-
-async function logout() {
-  console.log(localStorage.getItem("auth_token"));
-  try {
-    const response = await fetch("http://localhost:8000/users/token/logout/", {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${localStorage.getItem("auth_token")}`,
-        "Content-Type": "application/json; charset=UTF-8",
-      },
+    onMounted(() => {
+      if ("auth_token" in localStorage) authenticated.value = true;
     });
-    const return_data = await response.json();
-  } catch (error) {
-    console.log("ERROR: ", error);
-  }
 
-  localStorage.removeItem("auth_token");
-  authenticated.value = false;
-  window.location.reload();
-}
+    async function logout() {
+      console.log(localStorage.getItem("auth_token"));
+      try {
+        const response = await fetch(
+          "http://localhost:8000/users/token/logout/",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${localStorage.getItem("auth_token")}`,
+              "Content-Type": "application/json; charset=UTF-8",
+            },
+          }
+        );
+        const return_data = await response.json();
+      } catch (error) {
+        console.log("ERROR: ", error);
+      }
 
+      localStorage.removeItem("auth_token");
+      authenticated.value = false;
+      window.location.reload();
+    }
+
+    const context = {authenticated, logout}
+    return context;
+  },
+};
 </script>
 
 <style>
@@ -72,6 +82,10 @@ async function logout() {
 
 .main {
   margin-top: 70px;
+}
+
+[v-cloak] {
+  display: none;
 }
 
 a {

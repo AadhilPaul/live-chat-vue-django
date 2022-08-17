@@ -57,7 +57,7 @@ class IfInRoom(generics.RetrieveAPIView):
                 if request.user.username == member.username:
                     room_code = room.code
                     your_room = Room.objects.filter(code=room_code).first()
-                    return Response(self.serializer_class(your_room).data, status=status.HTTP_403_FORBIDDEN)
+                    return Response(self.serializer_class(your_room).data, status=status.HTTP_200_OK)
         return Response({"False": "Not in Room"}, status=status.HTTP_204_NO_CONTENT)
 
 

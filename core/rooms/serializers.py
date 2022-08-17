@@ -1,7 +1,15 @@
 from .models import Room
+from accounts.models import User
 from rest_framework import serializers
 
+class MemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', )
+
 class RoomSerializer(serializers.ModelSerializer):
+    member = MemberSerializer(many=True)
     class Meta:
         model = Room
         fields = "__all__"
+
