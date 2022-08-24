@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, get_list_or_404
 import json
 from accounts.models import User
+from accounts.serializers import UserSerializer
 from django.conf import settings
-from .serializers import RoomSerializer
+from .serializers import MemberSerializer, RoomSerializer
 from django.http import HttpResponse
 from .models import Room
 from rest_framework import status, generics
@@ -147,7 +148,7 @@ class RoomKickUser(generics.RetrieveUpdateAPIView):
             user = user_queryset[0]
             room = room_queryset[0]
             room_serialized = RoomSerializer(room).data
-            members_in_room = room_serialized['member']
+            eggs = MemberSerializer(room_serialized['member'], many=True).data
             self.check_object_permissions(self.request, obj=room)
 
             # if owner of room tries to kick himself.
@@ -156,8 +157,13 @@ class RoomKickUser(generics.RetrieveUpdateAPIView):
                     {'Forbidden': 'You cannot kick yourself from your room'}, status=status.HTTP_403_FORBIDDEN)
 
             # check if user is in the room.
+            spam = json.dumps(eggs)
+            json_object = json.loads(spam)
+            members_in_room = []
+            for usr in json_object:
+                members_in_room.append(usr['id'])
             if user_id in members_in_room:
                 room.member.remove(user)
                 return Response(self.serializer_class(room).data, status=status.HTTP_200_OK)
-            return Response({'Forbidden': 'This user is not in this room.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"Not In Room": "This User is not in this room"}, status=status.HTTP_403_FORBIDDEN)
         return Response({'Not Found': 'Room or User does not exists.'}, status=status.HTTP_404_NOT_FOUND)

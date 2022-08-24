@@ -43,8 +43,7 @@ class UserDetailView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
 
     def get_object(self, queryset=None, **kwargs):
-        item_id = self.kwargs.get('pk')
-        return get_object_or_404(User, id=item_id)
+        return get_object_or_404(User, id=self.request.user.id)
 
 
 # update user details

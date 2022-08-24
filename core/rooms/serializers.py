@@ -5,7 +5,8 @@ from rest_framework import serializers
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', )
+        fields = ('username', 'id')
+        # fields = "__all__"
 
 class RoomSerializer(serializers.ModelSerializer):
     member = MemberSerializer(many=True)

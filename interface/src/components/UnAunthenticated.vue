@@ -1,7 +1,9 @@
 <template>
-  <p class="title2">Log In to Create or Join a Room</p>
-  <br />
-  <small><a href="/login">Login with username and password?</a></small>
+  <w-card class="card">
+    <p class="title2">Log In to Create or Join a Room</p>
+    <br />
+    <small><a href="/login">Login with username and password?</a></small>
+  </w-card>
 </template>
 
 <script>
@@ -10,4 +12,10 @@ export default {
 };
 </script>
 
-<style></style>
+<style scoped>
+.card {
+  margin: 50px 35em;
+  background: #fcfcfc;
+  padding: 40px;
+}
+</style>
