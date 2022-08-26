@@ -3,7 +3,7 @@ import json
 from accounts.models import User
 from accounts.serializers import UserSerializer
 from django.conf import settings
-from .serializers import MemberSerializer, RoomSerializer
+from .serializers import MemberSerializer, RoomSerializer, RoomUpdateSerializer
 from django.http import HttpResponse
 from .models import Room
 from rest_framework import status, generics
@@ -81,6 +81,30 @@ class RoomCreateView(generics.CreateAPIView):
             room.member.add(host)
             return Response(self.serializer_class(room).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RoomUpdateView(generics.RetrieveUpdateAPIView):
+    serializer_class = RoomUpdateSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self, queryset=None, **kwargs):
+        room_code = self.kwargs.get('code')
+        return get_object_or_404(Room, code=room_code)
+
+    def put(self, request, format=None, **kwargs):
+        room_code = self.kwargs.get('code')
+        new_code = request.data.get('code')
+        if len(new_code) < 6:
+            return Response({"Bad Request": "Code must be at least 6 characters."}, status=status.HTTP_400_BAD_REQUEST)
+        queryset = Room.objects.filter(code=room_code)
+        if queryset.exists():
+            room = queryset[0]
+            room.code = new_code
+            room.save()
+            return Response({"code": new_code}, status=status.HTTP_200_OK)
+        return Response({"Not Found": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
         
 class RoomJoinView(generics.RetrieveUpdateAPIView):
     serializer_class = RoomSerializer

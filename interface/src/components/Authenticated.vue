@@ -4,7 +4,7 @@
     <w-divider class="my6"></w-divider>
     <w-grid columns="2" gap="4">
       <w-button lg bg-color="success">Create A Room</w-button>
-      <w-button lg bg-color="error">Join A Room</w-button>
+      <w-button route="/joinroom" lg bg-color="error">Join A Room</w-button>
     </w-grid>
   </w-card>
 </template>

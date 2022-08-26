@@ -14,3 +14,9 @@ class RoomSerializer(serializers.ModelSerializer):
         model = Room
         fields = "__all__"
 
+
+class RoomUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Room
+        fields = ['code']
+

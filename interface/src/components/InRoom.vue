@@ -1,15 +1,33 @@
 <template>
-  <p class="this-needs-to-be-here-idkwhy">asdf</p>
-  <w-card class="card">
-    <!-- <div v-for="i in members" v-bind:key="i" class="ma2" id="member-list">
-      <p>{{ i.username }}</p>
-      <hr/>
-    </div> -->
+  <p class="this-needs-to-be-here-idkwhy"></p>
+  <w-card class="card" :title="code" title-class="blue-light5--bg">
+    <w-menu left align-top>
+      <template #activator="{ on }">
+        <w-button
+          v-on="on"
+          class="mr3 edit"
+          icon="mdi mdi-cog-outline"
+        ></w-button>
+      </template>
+      <w-form @submit="change_code">
+        <w-input
+          label-position="right"
+          v-model="new_code"
+          outline
+          placeholder="Change room code..."
+          :validators="[code_length_validation, not_duplicate]"
+        >
+          <w-button type="submit" class="ma1">Submit</w-button>
+        </w-input>
+      </w-form>
+    </w-menu>
     <w-menu right align-top>
       <template #activator="{ on }">
-        <w-button v-on="on" class="mr3 members" icon="mdi mdi-account">
-          Show menu on click
-        </w-button>
+        <w-button
+          v-on="on"
+          class="mr3 members"
+          icon="mdi mdi-account-outline"
+        ></w-button>
       </template>
       <ul v-for="i in members" v-bind:key="i" class="ma2 member-list">
         <li class="name">
@@ -32,7 +50,7 @@
       outline
       placeholder="Type a message here.."
     >
-      <w-button class="ma1">Send</w-button>
+      <w-button type="submit" class="ma1">Send</w-button>
     </w-input>
   </w-card>
 </template>
@@ -46,30 +64,99 @@ export default {
   props: ["members", "code", "host", "user_id"],
   setup(props) {
     const members = props.members;
-    const cant_kick = ref(false);
+    const new_code = ref("");
+    let valids = {
+      length: true,
+      not_duplicate: true,
+    };
+
+    async function not_duplicate(value) {
+      if (value.length >= 6) {
+        const response = await fetch("http://localhost:8000/rooms/");
+        const return_data = await response.json();
+        for (let key in return_data) {
+          for (let _ in return_data[key]) {
+            if (value === return_data[key]["code"]) {
+              valids.not_duplicate = false;
+              return "This Code already exists.";
+            }
+
+            valids.not_duplicate = !(value === return_data[key]["code"]);
+          }
+        }
+      }
+    }
+
+    function code_length_validation(value) {
+      valids.length = value.length >= 6;
+      return value.length >= 6 || "Code must be at least 6 characters";
+    }
+
+    function validate() {
+      console.log("keys, ", Object.values(valids));
+      console.log("FORM", new_code._rawValue);
+      if (Object.values(valids).includes(false)) return false;
+      return true;
+    }
+
+    async function change_code() {
+      console.log("validation: ", validate());
+      if (validate()) {
+        try {
+          const response = await fetch(
+            `http://localhost:8000/rooms/room/update/${props.code}/`,
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Token ${localStorage.getItem("auth_token")}`,
+                "Content-Type": "application/json; charset=UTF-8",
+              },
+              body: JSON.stringify({code: new_code._rawValue}),
+            }
+          );
+          if (response.status == 200) window.location.reload();
+          const return_data = await response.json();
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
 
     async function kick(id, index) {
       if (id == props.host) {
-        cant_kick.value = true;
-        this.$waveui.notify("You can't kick yourself from your own room.", "error", 0);
+        this.$waveui.notify(
+          "You can't kick yourself from your own room.",
+          "error",
+          0
+        );
         return;
       }
       if (index == 0) props.members.shift();
       props.members.splice(index, index);
       try {
-        const response = await fetch(`http://localhost:8000/rooms/room/kick/${id}/${props.code}/`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Token ${localStorage.getItem("auth_token")}`,
-            "Content-Type": "application/json; charset=UTF-8",
-          },
-        });
-      } catch(error) {
+        const response = await fetch(
+          `http://localhost:8000/rooms/room/kick/${id}/${props.code}/`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Token ${localStorage.getItem("auth_token")}`,
+              "Content-Type": "application/json; charset=UTF-8",
+            },
+          }
+        );
+      } catch (error) {
         console.log(error);
       }
     }
 
-    const context = { members, kick };
+    const context = {
+      members,
+      kick,
+      not_duplicate,
+      code_length_validation,
+      new_code,
+      change_code,
+    };
     return context;
   },
 };
@@ -101,6 +188,11 @@ export default {
 .members {
   position: absolute;
   right: 0px;
+}
+
+.edit {
+  position: absolute;
+  right: 2.5em;
 }
 
 .member-list {

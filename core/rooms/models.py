@@ -30,6 +30,10 @@ class Room(models.Model):
     def __str__(self):
         return self.code
 
+    def clean(self):
+        if len(self.code) < 6:
+            raise ValidationError(('It must contain at 6 characters.'))
+
 
 class Messages(models.Model):
     text = models.TextField()
