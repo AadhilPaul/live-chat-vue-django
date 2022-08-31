@@ -67,20 +67,17 @@ class RoomCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None, **kwargs):
-        serializer = RoomSerializer(data=request.data)
         rooms = Room.objects.all()
         for room in rooms:
             for member in room.member.all():
                 if request.user.username == member.username:
                     return Response({"Forbidden": "You are already in a room"}, status=status.HTTP_403_FORBIDDEN)
                 
-        if serializer.is_valid():
-            host = request.user
-            room = Room(host=host)
-            room.save()
-            room.member.add(host)
-            return Response(self.serializer_class(room).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        host = request.user
+        room = Room(host=host)
+        room.save()
+        room.member.add(host)
+        return Response(self.serializer_class(room).data, status=status.HTTP_201_CREATED)
 
 
 class RoomUpdateView(generics.RetrieveUpdateAPIView):
@@ -143,11 +140,17 @@ class RoomLeaveView(generics.RetrieveUpdateAPIView):
         if queryset.exists():
             room = queryset[0]
             room_serialized = RoomSerializer(room).data
-            members_in_room = room_serialized['member']
+            eggs = MemberSerializer(room_serialized['member'], many=True).data
+            spam = json.dumps(eggs)
+            json_object = json.loads(spam)
+            members_in_room = []
+            for usr in json_object:
+                members_in_room.append(usr['id'])
             if request.user.id in members_in_room:
-                # if last user leaves room room is deleted.
-                if len(members_in_room) == 1:
+                # if last user leaves room the room is deleted.
+                if len(members_in_room) == 1 or request.user == room.host:
                     room.delete()
+                    return Response({"Deleted": "The room has been deleted"}, status=status.HTTP_204_NO_CONTENT)
                 room.member.remove(request.user)
                 return Response(self.serializer_class(room).data, status=status.HTTP_200_OK)
             return Response({"Forbidden": "You are not in this room."}, status=status.HTTP_403_FORBIDDEN)

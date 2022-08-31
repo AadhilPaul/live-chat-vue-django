@@ -4,6 +4,7 @@
       <a class="title2" href="/">Live Chat</a>
       <div class="spacer"></div>
       <div v-if="authenticated">
+        <p></p>
         <w-button @click="logout" id="button" class="ma1" bg-color="primary" lg>
           Logout
         </w-button>
@@ -63,7 +64,7 @@ export default {
       window.location.reload();
     }
 
-    const context = {authenticated, logout}
+    const context = { authenticated, logout }
     return context;
   },
 };

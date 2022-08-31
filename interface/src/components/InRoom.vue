@@ -21,6 +21,7 @@
         </w-input>
       </w-form>
     </w-menu>
+    <w-button @click="leave_room()" icon="mdi mdi-exit-to-app"></w-button>
     <w-menu right align-top>
       <template #activator="{ on }">
         <w-button
@@ -71,7 +72,7 @@ export default {
     };
 
     async function not_duplicate(value) {
-      if (value.length >= 6) {
+      if (value.length >= 6) { // no need for try/catch, just a get request
         const response = await fetch("http://localhost:8000/rooms/");
         const return_data = await response.json();
         for (let key in return_data) {
@@ -85,6 +86,24 @@ export default {
           }
         }
       }
+    }
+
+    async function leave_room() {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/rooms/room/leave/${props.code}/`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Token ${localStorage.getItem("auth_token")}`,
+              "Content-Type": "application/json; charset=UTF-8",
+            },
+          }
+        );
+      } catch (error) {
+        console.log(error);
+      }
+      window.location.reload('/')
     }
 
     function code_length_validation(value) {
@@ -111,7 +130,7 @@ export default {
                 Authorization: `Token ${localStorage.getItem("auth_token")}`,
                 "Content-Type": "application/json; charset=UTF-8",
               },
-              body: JSON.stringify({code: new_code._rawValue}),
+              body: JSON.stringify({ code: new_code._rawValue }),
             }
           );
           if (response.status == 200) window.location.reload();
@@ -150,6 +169,7 @@ export default {
     }
 
     const context = {
+      leave_room,
       members,
       kick,
       not_duplicate,
