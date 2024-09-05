@@ -1,2 +1,4 @@
-dropped project
-is unifinished
+dropped project :(
+
+
+login and sign up done. 
